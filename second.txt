@@ -1,0 +1,63 @@
+# # Function to get food analysis from Gemini AI
+# def get_gemini_response(input, image):
+#     model = genai.GenerativeModel("gemini-1.5-pro-latest")
+#     response = model.generate_content([input, image[0]])
+#     return response.text
+
+# # Function to handle image upload
+# def input_image_setup(uploaded_file):
+#     if uploaded_file is not None:
+#         bytes_data = uploaded_file.getvalue()
+#         image_parts = [{"mime_type": uploaded_file.type, "data": bytes_data}]
+#         return image_parts
+#     else:
+#         raise FileNotFoundError("No image uploaded")
+
+# # Function to simulate fetching burned calories from Google Fit API
+# def get_burned_calories():
+#     # This should be replaced with actual Google Fit API integration
+#     return 400  # Mock data: user has burned 400 calories
+
+# # Sidebar for user inputs
+# st.sidebar.title("Diet Plan Settings")
+# daily_calorie_goal = st.sidebar.number_input("Set your daily calorie goal (kcal):", min_value=500, max_value=5000, value=2000, step=100)
+# diet_plan = st.sidebar.text_area("Enter preferred foods (comma-separated):", "Chicken, Rice, Salad, Fruits")
+# st.sidebar.write("Note: You will receive food recommendations when calorie deficit is detected.")
+
+# # Display Header
+# st.header("🍎 Nutrition Monitor & Diet Planner")
+
+# # Image upload section
+# uploaded_file = st.file_uploader("Upload an image of your meal...", type=["jpg", "jpeg", "png"])
+# if uploaded_file:
+#     image = Image.open(uploaded_file)
+#     st.image(image, caption="Uploaded Image", use_column_width=True)
+
+# # Button to analyze food
+# if st.button("Analyze this Food"):
+#     with st.spinner("Analyzing..."):
+#         image_data = input_image_setup(uploaded_file)
+#         input_prompt = """
+#         You are a nutritionist analyzing a meal.
+#         Identify the food items, estimate calories, and provide nutritional breakdown.
+#         """
+#         response = get_gemini_response(input_prompt, image_data)
+#     st.success("Analysis Complete!")
+#     st.subheader("Food Analysis")
+#     st.write(response)
+
+# # Get burned calories
+# burned_calories = get_burned_calories()
+# st.sidebar.subheader(f"🔥 Calories Burned Today: {burned_calories} kcal")
+
+# # Check if user needs to eat
+# remaining_calories = daily_calorie_goal - burned_calories
+# if remaining_calories < 300:
+#     st.sidebar.warning("⚠️ You have a calorie deficit! Time to eat.")
+#     suggested_foods = diet_plan.split(", ")
+#     st.sidebar.write("Suggested Foods: 🍽️ " + ", ".join(suggested_foods[:3]))
+#     st.sidebar.balloons()  # Show a fun notification
+
+# # Auto-refresh every minute to track real-time calorie burn
+# time.sleep(60)
+# st.experimental_rerun()
