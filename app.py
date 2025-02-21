@@ -18,17 +18,34 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 st.markdown("""
     <style>
     .stApp {
-        background-color: #f5f5f5;        # Light grey background for the app
-        font-family: Arial, sans-serif;   # Arial font for a clean look
+        background-color: #121212;        /* Dark background color */
+        font-family: Arial, sans-serif;   /* Arial font for a clean look */
+        color: #ffffff;                  /* White text color */
     }
     .stButton>button {
-        background-color: #4CAF50;       # Green background for buttons
-        color: white;                    # White text for buttons
-        font-size: 16px;                 # Larger text for better readability
+        background-color: #6200EE;       /* Purple background for buttons */
+        color: white;                    /* White text for buttons */
+        font-size: 16px;                 /* Larger text for better readability */
     }
     .stHeader {
-        font-size: 24px;                 # Large font size for headers
-        font-weight: bold;               # Bold font weight for headers
+        font-size: 24px;                 /* Large font size for headers */
+        font-weight: bold;               /* Bold font weight for headers */
+        color: white;                    /* White text color for headers */
+    }
+    .stSubheader {
+        color: white;                    /* White text color for subheaders */
+    }
+    .h2 {
+        color: white;                    /* White text color for H2 headers */
+    }
+    .p {
+        color: white;                    /* White text color for paragraphs */
+    }
+    .st-emotion-cache-1cvow4s {
+        font-family: "Source Sans Pro", sans-serif;
+        font-size: 1rem;
+        margin-bottom: -1rem;
+        color: #ffffff;                 /* White text color */
     }
     </style>
     """, unsafe_allow_html=True)  # Enable HTML within markdown for custom styles
@@ -121,37 +138,33 @@ if submit:
     st.markdown("""
     <style>
     .stApp {
-        background-color: #D6EAF8;  /* Light blue background */
+        background-color: #121212;  /* Dark background */
         font-family: Arial, sans-serif;
     }
     .stButton>button {
-        background-color: #4CAF50;
+        background-color: #6200EE;
         color: white;
         font-size: 16px;
     }
     .stHeader {
         font-size: 24px;
         font-weight: bold;
-        color:black;
-        
+        color: white;
     }
     .stSubheader{
-           color:black;
-                }
-    .h2{
-    color:black;
-        }
-    .p{
-    color:black;
-                }
+        color: white;
+    }
+    .h2 {
+        color: white;
+    }
+    .p {
+        color: white;
+    }
     .st-emotion-cache-1cvow4s {
-    font-family: "Source Sans Pro", sans-serif;
-    font-size: 1rem;
-    margin-bottom: -1rem;
-    color: rgb(14, 17, 23);
-}
+        font-family: "Source Sans Pro", sans-serif;
+        font-size: 1rem;
+        margin-bottom: -1rem;
+        color: #ffffff;
+    }
     </style>
     """, unsafe_allow_html=True)
-
-
-

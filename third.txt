@@ -1,0 +1,122 @@
+import streamlit as st
+import pandas as pd
+import pytesseract
+from PIL import Image
+import cv2
+import os
+import requests
+import base64
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+HF_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+
+# Hugging Face API Models
+TEXT_GEN_MODEL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+IMAGE_CAPTION_MODEL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
+
+# Set Tesseract OCR path (Windows)
+pytesseract.pytesseract.tesseract_cmd = r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+
+# Function to extract text from a table image
+def extract_table_from_image(image_path):
+    image = cv2.imread(image_path)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    extracted_text = pytesseract.image_to_string(thresh)
+    
+    lines = extracted_text.split("\n")
+    data = [line.split() for line in lines if line.strip()]
+    
+    if len(data) > 1:
+        df = pd.DataFrame(data[1:], columns=["Meal", "Food", "Calories"])
+        df.to_csv("extracted_diet.csv", index=False)
+        return df
+    return None
+
+# Hugging Face AI Meal Analysis
+def get_food_analysis(meal, food, calories):
+    prompt = f"Analyze {meal}: {food}, {calories} calories. Give health benefits in points format with emojis."
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    data = {"inputs": prompt}
+    
+    response = requests.post(TEXT_GEN_MODEL, headers=headers, json=data)
+    result = response.json()
+    
+    if isinstance(result, list) and len(result) > 0:
+        return result[0].get("generated_text", "No response available.")
+    return "Unexpected API response format."
+
+# Calculate calories burned
+def calculate_calories_burned(steps, weight, height):
+    MET = 3.5  # Approximate MET value for walking
+    calories_burned = (MET * weight * steps * 0.0005)
+    return int(calories_burned)
+
+# Streamlit Sidebar
+st.sidebar.title("🍽️ Diet & Fitness Settings")
+daily_calorie_goal = st.sidebar.number_input("Set daily calorie goal (kcal):", min_value=500, max_value=5000, value=2000, step=100)
+steps = st.sidebar.number_input("Steps Walked:", min_value=0, value=5000, step=100)
+weight = st.sidebar.number_input("Weight (kg):", min_value=30.0, value=70.0, step=0.1)
+height = st.sidebar.number_input("Height (cm):", min_value=100.0, value=170.0, step=1.0)
+
+diet_file = st.sidebar.file_uploader("Upload a Diet Plan (Image, Food Photo, or CSV)", type=["csv", "jpg", "jpeg", "png"])
+
+burned_calories = calculate_calories_burned(steps, weight, height)
+st.sidebar.write(f"🔥 Estimated Calories Burned: **{burned_calories} kcal**")
+
+adjusted_calorie_goal = daily_calorie_goal - burned_calories
+st.sidebar.write(f"📌 Adjusted Daily Calorie Intake: **{adjusted_calorie_goal} kcal**")
+
+if adjusted_calorie_goal < 1500:
+    st.sidebar.warning("⚠️ Your calorie intake is too low. Consider increasing your food intake.")
+elif adjusted_calorie_goal > 3000:
+    st.sidebar.warning("⚠️ Your calorie intake is high. Consider reducing calorie-dense foods.")
+else:
+    st.sidebar.success("✅ Your diet is well-balanced!")
+
+df = None
+if diet_file is not None:
+    if diet_file.type in ["image/jpeg", "image/png"]:
+        image = Image.open(diet_file)
+        image_path = "uploaded_image.jpg"
+        image.save(image_path)
+        df = extract_table_from_image(image_path)
+
+        if df is not None:
+            st.markdown("## 📋 Personalized Diet Plan")
+            st.write(f"**Daily Calorie Goal:** {daily_calorie_goal} kcal")
+
+            df["Calories"] = df["Calories"].astype(float)
+            total_default_calories = df["Calories"].sum()
+            calorie_ratio = adjusted_calorie_goal / total_default_calories
+            df["Adjusted Calories"] = (df["Calories"] * calorie_ratio).astype(int)
+            st.table(df[["Meal", "Food", "Adjusted Calories"]])
+
+            st.markdown("## 🤖 AI Nutrition Analysis")
+            for _, row in df.iterrows():
+                st.markdown(f"### **{row['Meal']}**")
+                analysis = get_food_analysis(row["Meal"], row["Food"], row["Adjusted Calories"])
+                st.write(analysis)
+        else:
+            st.markdown("## 📸 Food Image Uploaded")
+            st.image(image, caption="Uploaded Dish", use_column_width=True)
+    
+    else:
+        df = pd.read_csv(diet_file)
+        df["Calories"] = df["Calories"].astype(float)
+        total_default_calories = df["Calories"].sum()
+        calorie_ratio = adjusted_calorie_goal / total_default_calories
+        df["Adjusted Calories"] = (df["Calories"] * calorie_ratio).astype(int)
+
+        st.markdown("## 📋 Personalized Diet Plan")
+        st.table(df[["Meal", "Food", "Adjusted Calories"]])
+
+        st.markdown("## 🤖 AI Nutrition Analysis")
+        for _, row in df.iterrows():
+            st.markdown(f"### **{row['Meal']}**")
+            analysis = get_food_analysis(row["Meal"], row["Food"], row["Adjusted Calories"])
+            st.write(analysis)
+else:
+    st.info("Please upload a diet plan image, a food photo, or a CSV file.")
